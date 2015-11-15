@@ -161,13 +161,13 @@ public class HomeActivity extends Activity {
                 checkEmptyState();
             }
         };
-        adapter = new FeedAdapter(this, dataManager, PocketUtils.isPocketInstalled(this));
+        adapter = new FeedAdapter(this, dataManager, columns, PocketUtils.isPocketInstalled(this));
         grid.setAdapter(adapter);
         layoutManager = new GridLayoutManager(this, columns);
         layoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
             @Override
             public int getSpanSize(int position) {
-                return position == adapter.getDataItemCount() ? columns : 1;
+                return adapter.getItemColumnSpan(position);
             }
         });
         grid.setLayoutManager(layoutManager);
@@ -478,7 +478,8 @@ public class HomeActivity extends Activity {
                 }
                 return true;
             case R.id.menu_about:
-                startActivity(new Intent(HomeActivity.this, AboutActivity.class));
+                startActivity(new Intent(HomeActivity.this, AboutActivity.class),
+                        ActivityOptions.makeSceneTransitionAnimation(this).toBundle());
                 return true;
         }
         return super.onOptionsItemSelected(item);

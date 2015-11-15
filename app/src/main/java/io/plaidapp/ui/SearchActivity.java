@@ -146,13 +146,13 @@ public class SearchActivity extends Activity {
                 }
             }
         };
-        adapter = new FeedAdapter(this, dataManager, PocketUtils.isPocketInstalled(this));
+        adapter = new FeedAdapter(this, dataManager, columns, PocketUtils.isPocketInstalled(this));
         results.setAdapter(adapter);
         GridLayoutManager layoutManager = new GridLayoutManager(this, columns);
         layoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
             @Override
             public int getSpanSize(int position) {
-                return position == adapter.getDataItemCount() ? columns : 1;
+                return adapter.getItemColumnSpan(position);
             }
         });
         results.setLayoutManager(layoutManager);
@@ -310,6 +310,14 @@ public class SearchActivity extends Activity {
                         android.R.interpolator.fast_out_linear_in))
                 .setListener(null)
                 .start();
+        if (searchToolbar.getZ() != 0f) {
+            searchToolbar.animate()
+                    .z(0f)
+                    .setDuration(600L)
+                    .setInterpolator(AnimationUtils.loadInterpolator(this,
+                            android.R.interpolator.fast_out_linear_in))
+                    .start();
+        }
 
         // if we're showing search results, circular hide them
         if (resultsContainer.getHeight() > 0) {

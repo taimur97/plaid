@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <!--
   Copyright 2015 Google Inc.
 
@@ -25,6 +24,6 @@
 
     <path
         android:pathData="@string/heart_full_path_24dp"
-        android:fillColor="@color/text_secondary_dark"/>
+        android:fillColor="@color/text_secondary_dark" />
 
 </vector>

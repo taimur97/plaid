@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <!--
   Copyright 2015 Google Inc.
 
@@ -45,7 +44,7 @@
 
         <EditText
             android:id="@+id/comment"
-            android:hint="reply"
+            android:hint="@string/hint_reply"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"

@@ -17,12 +17,16 @@
 package io.plaidapp.ui;
 
 import android.app.Activity;
+import android.app.ActivityOptions;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.TextInputLayout;
+import android.support.v4.app.ShareCompat;
+import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.view.animation.AnimationUtils;
 import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
@@ -36,6 +40,7 @@ import butterknife.OnClick;
 import butterknife.OnEditorAction;
 import butterknife.OnTextChanged;
 import io.plaidapp.R;
+import io.plaidapp.data.prefs.DesignerNewsPrefs;
 import io.plaidapp.ui.transitions.FabDialogMorphSetup;
 import io.plaidapp.ui.widget.BottomSheet;
 import io.plaidapp.ui.widget.ObservableScrollView;
@@ -104,12 +109,39 @@ public class PostNewDesignerNewsStory extends Activity {
                             .setStartDelay(0L)
                             .setDuration(80L)
                             .setInterpolator(AnimationUtils.loadInterpolator
-                                    (PostNewDesignerNewsStory.this, android.R.interpolator
-                                            .fast_out_slow_in))
+                                    (PostNewDesignerNewsStory.this,
+                                            android.R.interpolator.fast_out_slow_in))
                             .start();
                 }
             }
         });
+
+        // check for share intent
+        if (getIntent() != null && Intent.ACTION_SEND.equals(getIntent().getAction())) {
+            ShareCompat.IntentReader intentReader = ShareCompat.IntentReader.from(this);
+            url.setText(intentReader.getText());
+            title.setText(intentReader.getSubject());
+
+            // when receiving a share there is no shared element transition so animate up the
+            // bottom sheet to establish the spatial model i.e. that it can be dismissed downward
+            overridePendingTransition(R.anim.post_story_enter, R.anim.fade_out_rapidly);
+            bottomSheetContent.getViewTreeObserver().addOnPreDrawListener(
+                    new ViewTreeObserver.OnPreDrawListener() {
+                @Override
+                public boolean onPreDraw() {
+                    bottomSheetContent.getViewTreeObserver().removeOnPreDrawListener(this);
+                    bottomSheetContent.setTranslationY(bottomSheetContent.getHeight());
+                    bottomSheetContent.animate()
+                            .translationY(0f)
+                            .setStartDelay(120L)
+                            .setDuration(240L)
+                            .setInterpolator(AnimationUtils.loadInterpolator(
+                                    PostNewDesignerNewsStory.this,
+                                    android.R.interpolator.linear_out_slow_in));
+                    return false;
+                }
+            });
+        }
     }
 
     @Override
@@ -149,13 +181,23 @@ public class PostNewDesignerNewsStory extends Activity {
 
     @OnClick(R.id.new_story_post)
     protected void postNewStory() {
-        ImeUtils.hideIme(title);
-        Intent data = new Intent();
-        data.putExtra(EXTRA_STORY_TITLE, title.getText().toString());
-        data.putExtra(EXTRA_STORY_URL, url.getText().toString());
-        data.putExtra(EXTRA_STORY_COMMENT, comment.getText().toString());
-        setResult(RESULT_POST, data);
-        finishAfterTransition();
+        if (DesignerNewsPrefs.get(this).isLoggedIn()) {
+            ImeUtils.hideIme(title);
+            Intent data = new Intent();
+            data.putExtra(EXTRA_STORY_TITLE, title.getText().toString());
+            data.putExtra(EXTRA_STORY_URL, url.getText().toString());
+            data.putExtra(EXTRA_STORY_COMMENT, comment.getText().toString());
+            setResult(RESULT_POST, data);
+            finishAfterTransition();
+        } else {
+            Intent login = new Intent(this, DesignerNewsLogin.class);
+            login.putExtra(FabDialogMorphSetup.EXTRA_SHARED_ELEMENT_START_COLOR,
+                    ContextCompat.getColor(this, R.color.designer_news));
+            login.putExtra(FabDialogMorphSetup.EXTRA_SHARED_ELEMENT_START_CORNER_RADIUS, 0);
+            ActivityOptions options = ActivityOptions.makeSceneTransitionAnimation(
+                    this, post, getString(R.string.transition_designer_news_login));
+            startActivity(login, options.toBundle());
+        }
     }
 
     private void setPostButtonState() {
